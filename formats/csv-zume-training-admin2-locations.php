@@ -1,19 +1,12 @@
 <?php
-/**
- * @todo 1. Rename Zume_Training_CSV_Admin2
- * @todo 2. Rename $token
- * @todo 3. Rename $label
- * @todo 4. Replace MYSQL query in the query function
- * @todo 5. Update required_once file name to the name of this file.
- */
 
 
 if ( defined( 'ABSPATH' ) ) { // confirm wp is loaded
 
     class Zume_Training_CSV_Admin2
     {
-        public $token = 'csv_zume_location_admin2';
-        public $label = 'CSV (Zume Admin2)';
+        public $token = 'csv_zume_state_trainings';
+        public $label = 'CSV (Zume State Level Trainings)';
 
         /**
          * The format function builds the template of the format. From this format template, multiple configurations can
@@ -81,13 +74,6 @@ if ( defined( 'ABSPATH' ) ) { // confirm wp is loaded
             $args['rows'] = []; // deliberately empty because permanent will query below.
             $args['columns'] = array_keys( $args['rows'][0] );
 
-            // kill if no results
-            if (empty( $args['rows'] )) {
-                echo '<div class="notice notice-warning is-dismissible">
-                     <p>No results found for this configuration. Likely, there are no records for the countries you specified. Could not generate csv file.</p>
-                 </div>';
-                return $response['configuration'] ?? 0;
-            }
 
             // destination
             $one_time_key = hash( 'sha256', get_current_user_id() . time() . dt_get_site_id() . rand( 0, 999 ) );
