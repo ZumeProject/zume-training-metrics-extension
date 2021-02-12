@@ -206,7 +206,7 @@ if ( !defined( 'ABSPATH' )) {
                    SELECT grid_id, longitude, latitude, population, 0 as count FROM $wpdb->dt_location_grid WHERE level = 1;
                 ", ARRAY_A);
         $results['columns'] = array_keys($query[0]);
-        
+
         $locations = [];
         foreach( $query as $row ) {
             $locations[$row['grid_id']] = $row;
