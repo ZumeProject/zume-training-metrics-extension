@@ -1,15 +1,32 @@
 <?php
-
 /**
- * LOAD DATA TYPE FORMAT
+ * @todo 1. Rename Zume_Training_CSV_Registrations
+ * @todo 2. Rename $token
+ * @todo 3. Rename $label
+ * @todo 4. Replace MYSQL query in the query function
+ * @todo 5. Update required_once file name to the name of this file.
  */
-    class Zume_Training_JSON_Registrations
+
+
+if ( defined( 'ABSPATH' ) ) { // confirm wp is loaded
+
+    class Zume_Training_CSV_Registrations
     {
+        public $token = 'csv_zume_registrations';
+        public $label = 'CSV (Zume)';
 
-        public $token = 'json_zume_training';
-        public $label = 'JSON (Zume)';
-
-        public function format( $format ) {
+        /**
+         * The format function builds the template of the format. From this format template, multiple configurations can
+         * be created and stored.
+         *
+         * @note This function does not need modified for the simplest use of the export template.
+         *
+         * @link https://github.com/DiscipleTools/disciple-tools-metrics-export/master/includes/format-utilities.php:27 get_dt_metrics_export_base_format():
+         *
+         * @param $format
+         * @return mixed
+         */
+        public function format( $format) {
             /* Build base template of a format*/
             $format[$this->token] = get_dt_metrics_export_base_format();
 
@@ -24,25 +41,21 @@
                 ],
             ];
 
-            $format[$this->token]['types'] = [
-                'registrations' => [
-                    'by_day' => [
-                        'key' => 'by_day',
-                        'label' => 'Registrations by day'
-                    ],
-                ],
-            ];
+            $format[$this->token]['types'] = [];
+
             return $format;
         }
 
-        public function format_class( $classes) {
-            $classes[$this->token] = __CLASS__;
-            return $classes;
-        }
-
-        public function create( $response ) {
-
-            if ( ! isset( $response['type']['registrations'], $response['configuration'], $response['destination'] ) ){
+        /**
+         * This function is the create link function called by the tab "creat links".
+         *
+         * @note This function does not need modified for the simplest use of the export template.
+         *
+         * @param $response
+         * @return false|int|mixed
+         */
+        public function create( $response) {
+            if ( !isset( $response['configuration'], $response['destination'] ) ) {
                 return false;
             }
 
@@ -58,10 +71,8 @@
             /**
              * Create results according to selected type
              */
-            if ( 'by_day' === $response['type']['registrations'] ) {
-                $args['rows'] = $this->query_by_day();
-                $args['columns'] = array_keys( $args['rows'][0] );
-            }
+            $args['rows'] = $this->query();
+            $args['columns'] = array_keys( $args['rows'][0] );
 
             // kill if no results
             if (empty( $args['rows'] )) {
@@ -74,7 +85,7 @@
             // destination
             $one_time_key = hash( 'sha256', get_current_user_id() . time() . dt_get_site_id() . rand( 0, 999 ) );
             $postid = $response['configuration'];
-            switch ( $response['destination'] ) {
+            switch ($response['destination']) {
                 case 'expiring48':
                     $args['link'] = esc_url( plugin_dir_url( __FILE__ ) ) . esc_url( basename( __FILE__ ) ) . '?expiring48=' . esc_attr( $one_time_key );
                     $args['key'] = $one_time_key;
@@ -131,27 +142,30 @@
             return $response['configuration'] ?? 0; // return int config id, so ui reloads on same config
         }
 
-        public function update( $key, array $args ) {
-            if ( empty( $key ) ){
-                return false;
-            }
-            if ( ! isset( $args['timestamp'], $args['link'], $args['export'], $args['export']['configuration'], $args['export']['destination'], $args['export']['type']['registration'] ) ) {
+        /**
+         * This function is mainly used by the permanent link, which rebuilds each time requested.
+         *
+         * @note This function does not need modified for the simplest use of the export template.
+         *
+         * @param $key
+         * @param array $args
+         * @return array|false
+         */
+        public function update( $key, array $args) {
+            if ( !isset( $args['timestamp'], $args['link'], $args['export'], $args['export']['configuration'], $args['export']['destination'] ) ) {
                 return false;
             }
 
+            // timestamp
             $args['timestamp'] = current_time( 'Y-m-d H:i:s' );
 
-            /**
-             * Create results according to selected type
-             */
-            if ( 'by_day' === $args['export']['type']['registrations'] ) {
-                $args['rows'] = $this->query_by_day();
-                $args['columns'] = array_keys( $args['rows'][0] );
-            }
+            // Create results according to selected type
+            $args['rows'] = $this->query();
+            $args['columns'] = array_keys( $args['rows'][0] );
 
             // update destination
             $postid = $args['export']['configuration'];
-            switch ( $args['export']['destination'] ) {
+            switch ($args['export']['destination']) {
                 case 'expiring48':
                     set_transient( 'metrics_exports_' . $key, $args, 60 . 60 . 48 );
                     break;
@@ -169,22 +183,36 @@
             return $args;
         }
 
-        public function query_by_day() {
+        /**
+         *
+         * @return array|object|null
+         */
+        public function query() {
             global $wpdb;
             $results = $wpdb->get_results("
-                    SELECT 
-                           MONTH(user_registered) as month, 
-                           DAY(user_registered) as day, 
-                           YEAR(user_registered) as year,  
-                           COUNT(ID) as count 
-                    FROM $wpdb->users 
-                    GROUP BY YEAR(user_registered), 
-                             MONTH(user_registered), 
-                             DAY(user_registered);
+                  SELECT DATE_FORMAT(user_registered,'%Y-%m-%d') as date, COUNT(ID) as count FROM $wpdb->users GROUP BY DATE_FORMAT(user_registered,'%Y-%m-%d');
                 ", ARRAY_A);
             return $results;
         }
 
+        /**
+         * This function builds the class used by the build tab.
+         *
+         * @note This function does not need modified for the simplest use of the export template.
+         *
+         * @param $classes
+         * @return mixed
+         */
+        public function format_class( $classes) {
+            $classes[$this->token] = __CLASS__;
+            return $classes;
+        }
+
+        /**
+         * Singleton and Construct Functions
+         * @note This function does not need modified
+         * @var null
+         */
         private static $_instance = null;
         public static function instance() {
             if (is_null( self::$_instance )) {
@@ -195,42 +223,58 @@
         public function __construct() {
             add_filter( 'dt_metrics_export_format', [ $this, 'format' ], 10, 1 );
             add_filter( 'dt_metrics_export_register_format_class', [ $this, 'format_class' ], 10, 1 );
-        } // End __construct()
+        }
     }
-    Zume_Training_JSON_Registrations::instance();
+    Zume_Training_CSV_Registrations::instance();
+}
 
 
 /**
- * CREATE JSON FILE
+ * CREATE CSV FILE
+ * This section only loads if accessed directly.
+ * These 4 sections support expiring48, expiring360, download, permanent links
+ *
+ * @note This function does not need modified for the simplest use of the export template.
  */
 if ( !defined( 'ABSPATH' )) {
 
     // @codingStandardsIgnoreLine
     require($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // loads the wp framework when called
 
-    if ( isset( $_GET['expiring48'] ) || isset( $_GET['expiring360'] ) ) {
+    /**
+     * Lookup from available transients for matching token given in the url
+     */
+    if (isset( $_GET['expiring48'] ) || isset( $_GET['expiring360'] )) {
 
         $token = isset( $_GET['expiring48'] ) ? sanitize_text_field( wp_unslash( $_GET['expiring48'] ) ) : sanitize_text_field( wp_unslash( $_GET['expiring360'] ) );
         $results = get_transient( 'metrics_exports_' . $token );
-
-        header( 'Content-type: application/json' );
-
         if (empty( $results )) {
-            echo json_encode( [ 'status' => 'FAIL' ] );
+            echo 'Link no longer available';
             return;
         }
 
-        echo json_encode( $results );
-        exit;
-    }
-    else if ( isset( $_GET['download'] ) ) {
+        header( 'Content-Type: text/csv; charset=utf-8' );
+        header( 'Content-Disposition: attachment; filename=dt-csv-' . strtotime( $results['timestamp'] ) . '.csv' );
+
+        $output = fopen( 'php://output', 'w' );
+
+        fputcsv( $output, $results['columns'] );
+
+        foreach ($results['rows'] as $row) {
+            fputcsv( $output, $row );
+        }
+
+        fpassthru( $output );
+
+        // The download link deletes itself after being collected.
+    } else if (isset( $_GET['download'] )) {
         global $wpdb;
 
         $token = sanitize_text_field( wp_unslash( $_GET['download'] ) );
 
         $raw = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $wpdb->postmeta WHERE meta_key = %s LIMIT 1", 'download_' . $token ), ARRAY_A );
 
-        if ( empty( $raw ) ) {
+        if (empty( $raw )) {
             echo 'No link found';
             return;
         }
@@ -238,43 +282,54 @@ if ( !defined( 'ABSPATH' )) {
 
         delete_post_meta( $raw['post_id'], $raw['meta_key'] ); // delete after collection
 
-        header( 'Content-type: application/json' );
+        header( 'Content-Type: text/csv; charset=utf-8' );
+        header( 'Content-Disposition: attachment; filename=dt-csv-' . strtotime( $results['timestamp'] ) . '.csv' );
 
-        if (empty( $results )) {
-            echo json_encode( [ 'status' => 'FAIL' ] );
-            return;
+        $output = fopen( 'php://output', 'w' );
+
+        fputcsv( $output, $results['columns'] );
+
+        foreach ($results['rows'] as $row) {
+            fputcsv( $output, $row );
         }
 
-        echo json_encode( $results );
-        exit;
-    }
-    else if ( isset( $_GET['permanent'] ) ) {
+        fpassthru( $output );
+
+        /**
+         * The permanent link requires reloading this page in the context of WP and using the update function to get a new
+         * snapshot. If the permanent link is not needed, you could delete this 'if' section and the update function in the
+         * class.
+         *
+         */
+    } else if (isset( $_GET['permanent'] )) {
         global $wpdb;
 
         // test if key exists
         $token = sanitize_text_field( wp_unslash( $_GET['permanent'] ) );
         $raw = $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM $wpdb->postmeta WHERE meta_key = %s", 'permanent_' . $token ) );
-        if ( empty( $raw ) ) {
+        if (empty( $raw )) {
             echo 'No link found';
             return;
         }
 
-        // refresh data
-        require_once( 'json-zume-training-registrations.php' );
+        require_once( 'csv-zume-training-registrations.php' );
+
+
         $raw = maybe_unserialize( $raw );
-        $results = Zume_Training_JSON_Registrations::instance()->update( $token, $raw );
+        $results = Zume_Training_CSV_Registrations::instance()->update( $token, $raw );
 
-        header( 'Content-type: application/json' );
+        // load export header
+        header( 'Content-Type: text/csv; charset=utf-8' );
+        header( 'Content-Disposition: attachment; filename=dt-csv-' . strtotime( $results['timestamp'] ) . '.csv' );
 
-        if (empty( $results )) {
-            echo json_encode( [ 'status' => 'FAIL' ] );
-            return;
+        // build csv
+        $output = fopen( 'php://output', 'w' );
+        fputcsv( $output, $results['columns'] );
+        foreach ($results['rows'] as $row) {
+            fputcsv( $output, $row );
         }
-
-        echo json_encode( $results );
-        exit;
-    }
-    else {
+        fpassthru( $output );
+    } else {
         echo 'parameters not set correctly';
         return;
     }
