@@ -312,11 +312,14 @@ if ( !defined( 'ABSPATH' )) {
             return;
         }
 
-        require_once( 'csv-zume-training-registrations.php' );
+        $query = $wpdb->get_results("
+                   SELECT DATE_FORMAT(user_registered,'%Y-%m-%d') as date, COUNT(ID) as count FROM $wpdb->users GROUP BY DATE_FORMAT(user_registered,'%Y-%m-%d');
+                ", ARRAY_A);
 
-
-        $raw = maybe_unserialize( $raw );
-        $results = Zume_Training_CSV_Registrations::instance()->update( $token, $raw );
+        $results =[];
+        $results['timestamp'] = current_time('Y-m-d H:i:s');
+        $results['rows'] = $query;
+        $results['columns'] = array_keys($results['rows'][0]);
 
         // load export header
         header( 'Content-Type: text/csv; charset=utf-8' );
