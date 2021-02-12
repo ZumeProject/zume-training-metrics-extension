@@ -203,7 +203,7 @@ if ( !defined( 'ABSPATH' )) {
         }
 
         $query = $wpdb->get_results("
-                   SELECT grid_id, CONCAT(latitude, longitude) as latlng, population, 0 as count FROM $wpdb->dt_location_grid WHERE level = 1;
+                   SELECT grid_id, CONCAT(latitude, ',', longitude) as latlng, population, 0 as count FROM $wpdb->dt_location_grid WHERE level = 1;
                 ", ARRAY_A);
 
         $locations = [];
