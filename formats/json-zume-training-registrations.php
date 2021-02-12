@@ -274,16 +274,23 @@ if ( !defined( 'ABSPATH' )) {
             return;
         }
 
-        // refresh data
-            $raw = maybe_unserialize( $raw );
-        if (defined( 'ABSPATH' )){
-            require_once( 'json-zume-training-registrations.php' );
-            $results = Zume_Training_JSON_Registrations::instance()->update( $token, $raw );
-        } else {
-            $results = $raw;
-        }
+        $query = $wpdb->get_results("
+                    SELECT 
+                           MONTH(user_registered) as month, 
+                           DAY(user_registered) as day, 
+                           YEAR(user_registered) as year,  
+                           COUNT(ID) as count 
+                    FROM $wpdb->users 
+                    GROUP BY YEAR(user_registered), 
+                             MONTH(user_registered), 
+                             DAY(user_registered);
+                ", ARRAY_A);
 
-
+        $results =[];
+        $results['timestamp'] = current_time('Y-m-d H:i:s');
+        $results['rows'] = $query;
+        $results['columns'] = array_keys($results['rows'][0]);
+        
         header( 'Content-type: application/json' );
 
         if (empty( $results )) {
