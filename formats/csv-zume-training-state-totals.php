@@ -3,7 +3,7 @@
 
 if ( defined( 'ABSPATH' ) ) { // confirm wp is loaded
 
-    class Zume_Training_CSV_Admin2
+    class Zume_Training_CSV_State_Trainings
     {
         public $token = 'csv_zume_state_trainings';
         public $label = 'CSV (Zume State Level Trainings)';
@@ -172,7 +172,7 @@ if ( defined( 'ABSPATH' ) ) { // confirm wp is loaded
             add_filter( 'dt_metrics_export_register_format_class', [ $this, 'format_class' ], 10, 1 );
         }
     }
-    Zume_Training_CSV_Admin2::instance();
+    Zume_Training_CSV_State_Trainings::instance();
 }
 
 
@@ -203,7 +203,7 @@ if ( !defined( 'ABSPATH' )) {
         }
 
         $query = $wpdb->get_results("
-                   SELECT grid_id, longitude, latitude, population, 0 as count FROM $wpdb->dt_location_grid WHERE level = 1;
+                   SELECT grid_id, CONCAT(latitude, longitude) as latlng, population, 0 as count FROM $wpdb->dt_location_grid WHERE level = 1;
                 ", ARRAY_A);
 
         $locations = [];
@@ -230,7 +230,7 @@ if ( !defined( 'ABSPATH' )) {
 
         // build csv
         $output = fopen( 'php://output', 'w' );
-        fputcsv( $output, ['grid_id', 'longitude', 'latitude', 'population', 'count'] );
+        fputcsv( $output, ['grid_id', 'latlng', 'population', 'count'] );
         foreach ($locations as $row) {
             fputcsv( $output, $row );
         }
