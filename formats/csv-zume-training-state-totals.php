@@ -205,7 +205,6 @@ if ( !defined( 'ABSPATH' )) {
         $query = $wpdb->get_results("
                    SELECT grid_id, longitude, latitude, population, 0 as count FROM $wpdb->dt_location_grid WHERE level = 1;
                 ", ARRAY_A);
-        $results['columns'] = array_keys($query[0]);
 
         $locations = [];
         foreach( $query as $row ) {
@@ -224,18 +223,15 @@ if ( !defined( 'ABSPATH' )) {
             }
         }
 
-        $results =[];
-        $results['timestamp'] = current_time('Y-m-d H:i:s');
-        $results['rows'] = $locations;
 
         // load export header
         header( 'Content-Type: text/csv; charset=utf-8' );
-        header( 'Content-Disposition: attachment; filename=dt-csv-' . strtotime( $results['timestamp'] ) . '.csv' );
+        header( 'Content-Disposition: attachment; filename=dt-csv-' . strtotime( current_time('Y-m-d H:i:s')) . '.csv' );
 
         // build csv
         $output = fopen( 'php://output', 'w' );
-        fputcsv( $output, $results['columns'] );
-        foreach ($results['rows'] as $row) {
+        fputcsv( $output, ['grid_id', 'longitude', 'latitude', 'population', 'count'] );
+        foreach ($locations as $row) {
             fputcsv( $output, $row );
         }
         fpassthru( $output );
