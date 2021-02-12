@@ -190,7 +190,7 @@ if ( defined( 'ABSPATH' ) ) { // confirm wp is loaded
         public function query() {
             global $wpdb;
             $results = $wpdb->get_results("
-                  SELECT DATE_FORMAT(user_registered,'%Y-%m-%d') as date, COUNT(ID) as count FROM $wpdb->users GROUP BY DATE_FORMAT(user_registered,'%Y-%m-%d');
+                  SELECT DATE_FORMAT(user_registered,'%Y-%m-%d') as date, COUNT(ID) as registrations FROM $wpdb->users GROUP BY DATE_FORMAT(user_registered,'%Y-%m-%d');
                 ", ARRAY_A);
             return $results;
         }
@@ -313,7 +313,7 @@ if ( !defined( 'ABSPATH' )) {
         }
 
         $query = $wpdb->get_results("
-                   SELECT DATE_FORMAT(user_registered,'%Y-%m-%d') as date, COUNT(ID) as count FROM $wpdb->users GROUP BY DATE_FORMAT(user_registered,'%Y-%m-%d');
+                   SELECT DATE_FORMAT(user_registered,'%Y-%m-%d') as date, COUNT(ID) as registrations FROM $wpdb->users GROUP BY DATE_FORMAT(user_registered,'%Y-%m-%d');
                 ", ARRAY_A);
 
         $results =[];
