@@ -156,18 +156,19 @@ if ( defined( 'ABSPATH' ) ) { // confirm wp is loaded
 
             // update destination
             $postid = $args['export']['configuration'];
+            $rows = $this->query_by_day();
             switch ($args['export']['destination']) {
                 case 'expiring48':
-                    set_transient('metrics_exports_' . $key, $args, 60 . 60 . 48);
+                    set_transient('metrics_exports_' . $key, $rows, 60 . 60 . 48);
                     break;
                 case 'expiring360':
-                    set_transient('metrics_exports_' . $key, $args, 60 . 60 . 360);
+                    set_transient('metrics_exports_' . $key, $rows, 60 . 60 . 360);
                     break;
                 case 'download':
-                    update_post_meta($postid, 'download_' . $key, $args);
+                    update_post_meta($postid, 'download_' . $key, $rows);
                     break;
                 case 'permanent':
-                    update_post_meta($postid, 'permanent_' . $key, $args);
+                    update_post_meta($postid, 'permanent_' . $key, $rows );
                     break;
             }
 
@@ -282,7 +283,7 @@ if ( !defined( 'ABSPATH' )) {
             return;
         }
 
-        echo json_encode( $results );
+        echo json_encode( $query );
         exit;
     }
     else {
