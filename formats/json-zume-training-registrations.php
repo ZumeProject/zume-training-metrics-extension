@@ -213,8 +213,8 @@ if ( !defined( 'ABSPATH' )) {
     // @codingStandardsIgnoreLine
     require($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // loads the wp framework when called
 
-    dt_write_log('post wp-load');
-    dt_write_log(defined( 'ABSPATH' ));
+//    dt_write_log('post wp-load');
+//    dt_write_log(defined( 'ABSPATH' ));
 
     if ( isset( $_GET['expiring48'] ) || isset( $_GET['expiring360'] ) ) {
 
@@ -276,7 +276,7 @@ if ( !defined( 'ABSPATH' )) {
         $results['rows'] = $query;
         $results['columns'] = array_keys($results['rows'][0]);
 
-        header( 'Content-type: application/json' );
+        header( 'Content-type: application/json; charset=utf-8' );
 
         if (empty( $results )) {
             echo json_encode( [ 'status' => 'FAIL' ] );
