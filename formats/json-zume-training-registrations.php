@@ -211,10 +211,9 @@ if ( defined( 'ABSPATH' ) ) { // confirm wp is loaded
 if ( !defined( 'ABSPATH' )) {
 
     // @codingStandardsIgnoreLine
+    define( 'SHORTINIT', 1 );
     require($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // loads the wp framework when called
 
-//    dt_write_log('post wp-load');
-//    dt_write_log(defined( 'ABSPATH' ));
 
     if ( isset( $_GET['expiring48'] ) || isset( $_GET['expiring360'] ) ) {
 
@@ -271,17 +270,9 @@ if ( !defined( 'ABSPATH' )) {
                    SELECT DATE_FORMAT(user_registered,'%Y-%m-%d') as date, COUNT(ID) as Registrations FROM $wpdb->users GROUP BY DATE_FORMAT(user_registered,'%Y-%m-%d');
                 ", ARRAY_A);
 
-        $results =[];
-        $results['timestamp'] = current_time('Y-m-d H:i:s');
-        $results['rows'] = $query;
-        $results['columns'] = array_keys($results['rows'][0]);
+        define( 'DOING_AJAX', true );
 
-        header( 'Content-type: application/json; charset=utf-8' );
-
-        if (empty( $results )) {
-            echo json_encode( [ 'status' => 'FAIL' ] );
-            return;
-        }
+        header( 'Content-type: application/json' );
 
         echo json_encode( $query );
         exit;
