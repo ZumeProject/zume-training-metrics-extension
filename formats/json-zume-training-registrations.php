@@ -211,6 +211,7 @@ if ( defined( 'ABSPATH' ) ) { // confirm wp is loaded
 if ( !defined( 'ABSPATH' )) {
 
     // @codingStandardsIgnoreLine
+    define( 'DOING_AJAX', true );
     define( 'SHORTINIT', 1 );
     require($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // loads the wp framework when called
 
@@ -270,7 +271,6 @@ if ( !defined( 'ABSPATH' )) {
                    SELECT DATE_FORMAT(user_registered,'%Y-%m-%d') as date, COUNT(ID) as Registrations FROM $wpdb->users GROUP BY DATE_FORMAT(user_registered,'%Y-%m-%d');
                 ", ARRAY_A);
 
-        define( 'DOING_AJAX', true );
 
         header( 'Content-type: application/json' );
 
